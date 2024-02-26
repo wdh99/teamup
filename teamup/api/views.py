@@ -58,8 +58,19 @@ class SpaceViewSet(viewsets.ModelViewSet):
             space.users.remove(user)
         return Response({'errMsg': 'request:ok'})
 
+    @action(detail=True, methods=['put'])
+    def change_space_name(self, request, *args, **kwargs):
+        data = request.data
+        space = self.get_object()
+        if data['name'] is None or len(data['name']) > 20:
+            return Response({'msg': 'space name can not be blank or long than 20 chars'}, status=403)
+        space.name = data['name']
+        space.save()
+        return Response({'errMsg': 'request:ok'})
 
 # ViewSets define the view behavior.
+
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = None
