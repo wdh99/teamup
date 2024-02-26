@@ -24,6 +24,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class SpaceViewSet(viewsets.ModelViewSet):
     queryset = Space.objects.all()
     serializer_class = SpaceSerializer
+
     def get_queryset(self):
         owner = self.request.query_params.get('owner', None)
         user_id = self.request.query_params.get('user_id', None)
@@ -37,11 +38,32 @@ class SpaceViewSet(viewsets.ModelViewSet):
             queryset = super().get_queryset()
         return queryset
 
+    @action(detail=True, methods=['post'])
+    def add_user_to_space(self, request, *args, **kwargs):
+        data = request.data
+        space = self.get_object()
+        user = User.objects.filter(pk=data['user_id']).first()
+        if user:
+            space.users.add(user)
+        return Response({'errMsg': 'request:ok'})
+
+    @action(detail=True, methods=['post'])
+    def delete_user_from_space(self, request, *args, **kwargs):
+        data = request.data
+        space = self.get_object()
+        if space.owner.id == data['user_id']:
+            return Response({'msg': 'cant not delete yourself'}, status=403)
+        user = User.objects.filter(pk=data['user_id']).first()
+        if user:
+            space.users.remove(user)
+        return Response({'errMsg': 'request:ok'})
+
 
 # ViewSets define the view behavior.
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = None
+
     def get_serializer_class(self): # 重写了基类里面的get_serializer_class方法,这是固定写法
         if self.request.method in ['PUT','POST','PATCH']:
             serializers_class = PostSerializerForPOST
@@ -74,23 +96,26 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True,methods=['post'])
     def add_user_to_post(self, request, pk=None):
-        post = Post.objects.get(pk=pk)
-        user_id = self.request.data.get('user_id', None)
-        user = User.objects.get(pk=user_id)
-        post.users.add(user)
+        data = request.data
+        post = self.get_object()
+        user = User.objects.filter(pk=data['user_id']).first()
+        if user:
+            post.users.add(user)
         return Response({'errMsg': 'request:ok'})
     
     @action(detail=True,methods=['post'])
     def delete_user_from_post(self, request, pk=None):
-        post = Post.objects.get(pk=pk)
-        user_id = self.request.data.get('user_id', None)
-        user = User.objects.get(pk=user_id)
-        # 自己不能退出自己创建的帖子
-        if post.owner == user_id:
-            return Response({'msg': 'cant not delete yourself'},status=403)
-        else:
+        data = request.data
+        post = self.get_object()
+        if post.owner.id == data['user_id']:
+            # 自己不能退出自己创建的帖子
+            return Response({'msg': 'cant not delete yourself'}, status=403)
+
+        user = User.objects.filter(pk=data['user_id'])
+        if user:
             post.users.remove(user)
-            return Response({'msg': 'ok'},status=200)
+
+        return Response({'msg': 'ok'}, status=200)
         
 
 
