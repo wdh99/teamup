@@ -20,7 +20,7 @@ class User(models.Model):
 
 
 class Space(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(unique=True, max_length=20)
     owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_space')  # Space的对象可以.user_space
     # uuid = models.CharField(default=uuid.uuid4().hex, unique=True, max_length=100)
     users = models.ManyToManyField(User, blank=True)
@@ -54,3 +54,7 @@ class Post(models.Model):
     payment_note = models.CharField(max_length=200) # 收费备注
     create_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
+
+
+class Notify(models.Model):
+    text = models.CharField(max_length=300)  # 通知信息

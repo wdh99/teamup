@@ -13,7 +13,8 @@ router.register(r'space', views.SpaceViewSet)
 router.register(r'post', views.PostViewSet)
 urlpatterns = [
     path('', include(router.urls)),
-    path('login',views.login)
+    path('login',views.login),
+    path('notify_text',views.notify_text)
     # path('space/', views.space),
     # path('space/<int:pk>/', views.space_detail),
     # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))

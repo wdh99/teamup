@@ -10,7 +10,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.decorators import api_view,action
 
-from .models import User,Space,Post
+from .models import User,Space,Post,Notify
 from .serializers import *
 
         
@@ -28,12 +28,15 @@ class SpaceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         owner = self.request.query_params.get('owner', None)
         user_id = self.request.query_params.get('user_id', None)
+        name = self.request.query_params.get('name', None)
         # 获取用户创建的空间
         if owner is not None:
             queryset = Space.objects.filter(owner=owner).order_by('id')
         # 获取用户有关的空间(加入和创建的)
         elif user_id is not None:
             queryset = Space.objects.filter(users=user_id).order_by('id')
+        elif name is not None:
+            queryset = Space.objects.filter(name=name).order_by('id')
         else:
             queryset = super().get_queryset()
         return queryset
@@ -45,7 +48,7 @@ class SpaceViewSet(viewsets.ModelViewSet):
         user = User.objects.filter(pk=data['user_id']).first()
         if user:
             space.users.add(user)
-        return Response({'errMsg': 'request:ok'})
+        return Response({'msg': 'ok'})
 
     @action(detail=True, methods=['post'])
     def delete_user_from_space(self, request, *args, **kwargs):
@@ -56,7 +59,7 @@ class SpaceViewSet(viewsets.ModelViewSet):
         user = User.objects.filter(pk=data['user_id']).first()
         if user:
             space.users.remove(user)
-        return Response({'errMsg': 'request:ok'})
+        return Response({'msg': 'ok'})
 
     @action(detail=True, methods=['put'])
     def change_space_name(self, request, *args, **kwargs):
@@ -66,7 +69,7 @@ class SpaceViewSet(viewsets.ModelViewSet):
             return Response({'msg': 'space name can not be blank or long than 20 chars'}, status=403)
         space.name = data['name']
         space.save()
-        return Response({'errMsg': 'request:ok'})
+        return Response({'msg': 'ok'})
 
 # ViewSets define the view behavior.
 
@@ -112,7 +115,7 @@ class PostViewSet(viewsets.ModelViewSet):
         user = User.objects.filter(pk=data['user_id']).first()
         if user:
             post.users.add(user)
-        return Response({'errMsg': 'request:ok'})
+        return Response({'msg': 'ok'})
     
     @action(detail=True,methods=['post'])
     def delete_user_from_post(self, request, pk=None):
@@ -128,6 +131,14 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return Response({'msg': 'ok'}, status=200)
         
+
+@api_view(['GET'])
+def notify_text(r:HttpRequest):
+    res = {'msg':'', 'code':-1}
+    text = Notify.objects.all()[0].text
+    res['code']=1
+    res['data']=text
+    return JsonResponse(res)
 
 
 # @api_view(['GET'])
