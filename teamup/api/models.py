@@ -31,7 +31,7 @@ class Space(models.Model):
 
 
 class Post(models.Model):
-    owner = models.ForeignKey(User, to_field='open_id', on_delete=models.CASCADE, related_name='user_post')    #  应该关联openid(为什么?Space需要吗)
+    owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='user_post')    #  应该关联openid(为什么?Space需要吗)
     space = models.ForeignKey(Space, on_delete=models.DO_NOTHING, related_name='space_post')
     users = models.ManyToManyField(User, blank=True)  # 活动参与者
     text = models.CharField(max_length=200)  # 帖子文本
